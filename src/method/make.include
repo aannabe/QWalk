@@ -20,8 +20,9 @@ MY_SOURCES:= \
 	Split_sample.cpp \
 	Test_method.cpp \
 	Vmc_method.cpp  \
-        Wannier_method.cpp
-
+        Wannier_method.cpp \
+        Optimize_method2.cpp \
+        Levenberg_Marquardt.cpp \
 
 SOURCES:= $(SOURCES) $(addprefix method/,$(MY_SOURCES))
 
