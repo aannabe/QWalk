@@ -527,14 +527,14 @@ void Sorndmc_method::runWithVariables(Properties_manager & prop,
           //This is somewhat inaccurate..will need to change it later
           //For the moment, the autocorrelation will be slightly
           //underestimated
-          pts(walker).prop.parent=walker;
-          pts(walker).prop.nchildren=1;
-          pts(walker).prop.children(0)=walker;
+          //pts(walker).prop.parent=walker;
+          //pts(walker).prop.nchildren=1;
+          //pts(walker).prop.children(0)=walker;
           pts(walker).prop.avgrets.Resize(1,average_var.GetDim(0));
 
-	  pts(walker).gprop.parent=walker;
-	  pts(walker).gprop.nchildren=1;
-	  pts(walker).gprop.children(0)=walker;
+	  //pts(walker).gprop.parent=walker;
+	  //pts(walker).gprop.nchildren=1;
+	  //pts(walker).gprop.children(0)=walker;
 
           for(int i=0; i< average_var.GetDim(0); i++) { 
             average_var(i)->evaluate(wfdata, wf, sys, sample, pts(walker).prop.avgrets(0,i));
