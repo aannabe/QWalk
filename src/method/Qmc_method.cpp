@@ -47,7 +47,10 @@ int allocate(vector <string> & words,
   
   else if(caseless_eq(words[0],"OPTIMIZE"))
     methptr=new Optimize_method;
-  
+
+//  else if(caseless_eq(words[0],"OPTIMIZE2"))
+//    methptr=new Optimize_method2;
+
   else if(caseless_eq(words[0],"SHDMC"))
     methptr=new Shdmc_method;
   

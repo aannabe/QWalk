@@ -270,16 +270,17 @@ void Spinor_Slat_wf_data::read(vector <string> & words, unsigned int & pos,
 
   //Decide on the updating scheme:
   
-  if(ndet > 1 && nelectrons > 10) {
-    use_clark_updates=true;
-  }
-  else { use_clark_updates=false; } 
-  if(haskeyword(words,pos=startpos,"CLARK_UPDATES")) { 
-    use_clark_updates=true;
-  }
-  else if(haskeyword(words,pos=startpos,"SHERMAN_MORRISON_UPDATES")) { 
-    use_clark_updates=false;
-  }
+  use_clark_updates=false;
+//  if(ndet > 1 && nelectrons > 10) {
+//    use_clark_updates=true;
+//  }
+//  else { use_clark_updates=false; } 
+//  if(haskeyword(words,pos=startpos,"CLARK_UPDATES")) { 
+//    use_clark_updates=true;
+//  }
+//  else if(haskeyword(words,pos=startpos,"SHERMAN_MORRISON_UPDATES")) { 
+//    use_clark_updates=false;
+//  }
 
 
 

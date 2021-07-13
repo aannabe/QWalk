@@ -597,23 +597,17 @@ template <class T> inline void Spinor_Slat_wf<T>::updateSpinLap( Wavefunction_da
 template <> inline int Spinor_Slat_wf<dcomplex>::getParmDeriv(Wavefunction_data *  wfdata, 
 			  Sample_point * sample ,
 			  Parm_deriv_return & derivatives){
-  error("parmderiv not supported for complex orbitals yet");
-  return 0;
-}
 
-template <> inline int Spinor_Slat_wf<doublevar>::getParmDeriv(Wavefunction_data *  wfdata, 
-			  Sample_point * sample ,
-			  Parm_deriv_return & derivatives){
- error("parmderiv not supported yet!"); 
-  /*
   if(inverseStale) { 
     detVal=lastDetVal;
     updateInverse(parent, lastValUpdate);
     inverseStale=0;
   }
   
+  int tote=sample->electronSize();
+//  wf.Resize(tote);
   int nparms=parent->nparms();
-  int tote=nelectrons(0)+nelectrons(1);
+//  int tote=nelectrons(0)+nelectrons(1);
   
   derivatives.gradient.Resize(nparms);
   derivatives.hessian.Resize(nparms, nparms);
@@ -630,84 +624,137 @@ template <> inline int Spinor_Slat_wf<doublevar>::getParmDeriv(Wavefunction_data
   }
   
   if(parent->optimize_mo) {
-    parent->orbrot->getParmDeriv<doublevar>(parent->detwt,moVal,inverse, detVal, derivatives);
-    return 1;
+  error("parmderiv error here");
+  return 0;
+//    parent->orbrot->getParmDeriv<doublevar>(parent->detwt,moVal,inverse, detVal, derivatives);
+//    return 1;
   }
   else if(parent->optimize_det) {
-    log_value<doublevar> detsum=0;
-    Array1 <log_value<doublevar> > detvals(ndet);
-    Array3 <log_value <doublevar> > detgrads(ndet,tote,5);
-    Array2 <log_value <doublevar> > totgrads(tote,5);
-    for(int det=0; det < ndet; det++) {
-      log_value<doublevar> thisdet=detVal(0,det,0)*detVal(0,det,1);
-      detvals(det)=parent->detwt(det)*thisdet;
-    }
-
-    Array3 <log_value<doublevar> > tmp_detgrads;
-    for(int e=0; e< tote; e++) { 
-      getDetLap(e,tmp_detgrads);
-      for(int det=0; det < ndet; det++) { 
-        for(int d=1; d< 5; d++) {
-          detgrads(det,e,d)=tmp_detgrads(0,det,d);
-        }
-      }
-    }
-
-    detsum=sum(detvals);
-    detsum.logval*=-1;
-    derivatives.gradient=0.0;
-    derivatives.gradderiv=0.0;
-    //---------------  set up temporary variables
-    for(int e=0; e< tote; e++) {
-      for(int d=1; d< 5; d++) { 
-
-        Array1 <log_value<doublevar> > tmpgrad(ndet);
-        for(int det=0; det < ndet; det++) 
-          tmpgrad(det)=parent->detwt(det)*detgrads(det,e,d);
-        totgrads(e,d)=sum(tmpgrad);
-        totgrads(e,d)*=detsum;
-      }
-    }
-
-    //---------------
-    int det=parent->CSF(0).GetDim(0)-1;
-    derivatives.gradderiv=0.0;
-    for(int csf=1; csf < parent->ncsf; csf++) { 
-      for(int j=1;j<parent->CSF(csf).GetDim(0);j++){
-        doublevar coeff=parent->CSF(csf)(j);
-        int index=csf-1;
-        log_value<doublevar> thisdet=detVal(0,det,0)*detVal(0,det,1);
-        derivatives.gradient(index)+=coeff*thisdet.val();
-        for(int e=0; e< tote; e++) {
-          for(int d=1; d< 5; d++) {
-            derivatives.gradderiv(index,e,d-1)+=coeff
-            *(detgrads(det,e,d).val()-totgrads(e,d).val()*thisdet.val())*detsum.val();
-            //cout << "coeff " << coeff << " detgrad " << detgrads(det,e,d).val()
-            //  << " totgrad " << totgrads(e,d).val() << " thisdet " << thisdet.val()
-            //  << " detsum " << detsum.val() << endl;
-            //cout << "deriv " << derivatives.gradderiv(index,e,d-1) << endl;
-          }
-        }
-        det++;
-      }
-    }
-    for(int csf=0; csf< nparms; csf++) {
-      derivatives.gradient(csf)*=detsum.val(); 
-    }
-    derivatives.hessian=0;
-    //for(int csf=0; csf < parent->ncsf; csf++) { 
-    //  for(int e=0; e< tote; e++) { 
-    //    for(int d=0; d< 4; d++) { 
-    //      cout << "deriv " << derivatives.gradderiv(csf,e,d) << endl;
-    //    }
-    //  }
-    //}
-    return 1;
+  error("parmderiv error here");
+  return 0;
   }
   else { 
     derivatives.gradient=0;
     derivatives.hessian=0;
     return 1;
+  }
+//  error("parmderiv not supported for complex orbitals yet");
+  return 0;
+}
+
+template <> inline int Spinor_Slat_wf<doublevar>::getParmDeriv(Wavefunction_data *  wfdata, 
+			  Sample_point * sample ,
+			  Parm_deriv_return & derivatives){
+ error("parmderiv not supported yet!"); 
+  /*
+  if(inverseStale) { 
+    detVal=lastDetVal;
+    updateInverse(parent, lastValUpdate);
+    inverseStale=0;
+  }
+  
+  int tote=sample->electronSize();
+//  wf.Resize(tote);
+  int nparms=parent->nparms();
+//  int tote=nelectrons(0)+nelectrons(1);
+  
+  derivatives.gradient.Resize(nparms);
+  derivatives.hessian.Resize(nparms, nparms);
+  derivatives.gradderiv.Resize(nparms,tote,4);
+  derivatives.val_gradient.Resize(tote,4);
+
+
+  Wf_return lap(1,5);
+  for(int e=0; e< tote; e++) {
+    getLap(wfdata,e,lap);
+    for(int d=1; d< 5; d++) {
+      derivatives.val_gradient(e,d-1)=lap.amp(0,d);
+    }
+  }
+  
+  if(parent->optimize_mo) {
+  error("parmderiv error here");
+  return 0;
+//    parent->orbrot->getParmDeriv<doublevar>(parent->detwt,moVal,inverse, detVal, derivatives);
+//    return 1;
+  }
+  else if(parent->optimize_det) {
+  error("parmderiv error here");
+  return 0;
+//    log_value<doublevar> detsum=0;
+//    Array1 <log_value<doublevar> > detvals(ndet);
+//    Array3 <log_value <doublevar> > detgrads(ndet,tote,5);
+//    Array2 <log_value <doublevar> > totgrads(tote,5);
+//    for(int det=0; det < ndet; det++) {
+//      log_value<doublevar> thisdet=detVal(0,det,0)*detVal(0,det,1);
+//      detvals(det)=parent->detwt(det)*thisdet;
+//    }
+//
+//    Array3 <log_value<doublevar> > tmp_detgrads;
+//    for(int e=0; e< tote; e++) { 
+//      getDetLap(e,tmp_detgrads);
+//      for(int det=0; det < ndet; det++) { 
+//        for(int d=1; d< 5; d++) {
+//          detgrads(det,e,d)=tmp_detgrads(0,det,d);
+//        }
+//      }
+//    }
+//
+//    detsum=sum(detvals);
+//    detsum.logval*=-1;
+//    derivatives.gradient=0.0;
+//    derivatives.gradderiv=0.0;
+//    //---------------  set up temporary variables
+//    for(int e=0; e< tote; e++) {
+//      for(int d=1; d< 5; d++) { 
+//
+//        Array1 <log_value<doublevar> > tmpgrad(ndet);
+//        for(int det=0; det < ndet; det++) 
+//          tmpgrad(det)=parent->detwt(det)*detgrads(det,e,d);
+//        totgrads(e,d)=sum(tmpgrad);
+//        totgrads(e,d)*=detsum;
+//      }
+//    }
+//
+//    //---------------
+//    int det=parent->CSF(0).GetDim(0)-1;
+//    derivatives.gradderiv=0.0;
+//    for(int csf=1; csf < parent->ncsf; csf++) { 
+//      for(int j=1;j<parent->CSF(csf).GetDim(0);j++){
+//        doublevar coeff=parent->CSF(csf)(j);
+//        int index=csf-1;
+//        log_value<doublevar> thisdet=detVal(0,det,0)*detVal(0,det,1);
+//        derivatives.gradient(index)+=coeff*thisdet.val();
+//        for(int e=0; e< tote; e++) {
+//          for(int d=1; d< 5; d++) {
+//            derivatives.gradderiv(index,e,d-1)+=coeff
+//            *(detgrads(det,e,d).val()-totgrads(e,d).val()*thisdet.val())*detsum.val();
+//            //cout << "coeff " << coeff << " detgrad " << detgrads(det,e,d).val()
+//            //  << " totgrad " << totgrads(e,d).val() << " thisdet " << thisdet.val()
+//            //  << " detsum " << detsum.val() << endl;
+//            //cout << "deriv " << derivatives.gradderiv(index,e,d-1) << endl;
+//          }
+//        }
+//        det++;
+//      }
+//    }
+//    for(int csf=0; csf< nparms; csf++) {
+//      derivatives.gradient(csf)*=detsum.val(); 
+//    }
+//    derivatives.hessian=0;
+//    //for(int csf=0; csf < parent->ncsf; csf++) { 
+//    //  for(int e=0; e< tote; e++) { 
+//    //    for(int d=0; d< 4; d++) { 
+//    //      cout << "deriv " << derivatives.gradderiv(csf,e,d) << endl;
+//    //    }
+//    //  }
+//    //}
+//    return 1;
+//  }
+//  else { 
+//    derivatives.gradient=0;
+//    derivatives.hessian=0;
+//    return 1;
   }
   */
   

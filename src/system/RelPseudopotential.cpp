@@ -35,6 +35,50 @@ Some legendre polynomials..
 */
 
 
+//I should comment this out.///////////////
+doublevar rellegendre(doublevar x, int n)
+{
+  switch(n)
+  {
+  case 0:
+    return 1;
+  case 1:
+    return x;
+  case 2:
+    return .5*(3*x*x-1);
+  case 3:
+    return .5*(5*x*x*x - 3*x);
+  case 4:
+    return 0.125*(35*x*x*x*x -30*x*x +3);
+  case 5:
+    return 0.125*(63*x*x*x*x*x - 70*x*x*x + 15*x);
+  default:
+    error("Do not have legendre polynomial of order ", n);
+    return 0; //shouldn't get here, but gets rid of a compiler message
+  }
+}
+//
+//doublevar legendre_der(doublevar x, int n) {
+//  switch(n) {
+//  case 0:
+//    return 0;
+//  case 1:
+//    return 1;
+//  case 2:
+//    return 3*x;
+//  case 3:
+//    return .5*(15*x*x-3);
+//  case 4:
+//    return .5*(35*x*x*x-15*x);
+//  case 5:
+//    return .125*(315*x*x*x*x-210*x*x+15);
+//  default:
+//    error("Do not have legendre polynomial of order ", n);
+//    return 0;
+//  }
+//}
+
+
 dcomplex SphericalHarmonic(int l,int m, const Array1<doublevar> & r) {
   assert(r.GetDim(0) == 5);
   switch (l) {
@@ -199,7 +243,6 @@ RelPseudopotential::~RelPseudopotential()  {
 //----------------------------------------------------------------------
 
 
-
 void RelPseudopotential::calcNonlocTmove(Wavefunction_data * wfdata, System * sys,
                      Sample_point * sample,
                      Wavefunction * wf,
@@ -214,7 +257,255 @@ void RelPseudopotential::calcNonlocTmove(Wavefunction_data * wfdata, System * sy
   Array1 <doublevar> parm_deriv;
   calcNonlocWithAllvariables(wfdata,sys,sample, wf, test,totalv, true, tmoves,false, parm_deriv);
 }
+
+
 //----------------------------------------------------------------------
+
+
+//------------------------I should comment this out ///////////////
+void RelPseudopotential::calcPseudoSeparated(Wavefunction_data * wfdata,
+                                          System * sys,
+                                          Sample_point * sample,
+                                          Wavefunction * wf,
+                                          const Array1 <doublevar> & accept_var,
+                                          Array2 <doublevar> & totalv)//, 
+{
+  int natoms=sample->ionSize();
+  int nwf=wf->nfunc();
+  assert(accept_var.GetDim(0) >= nTest());
+  //assert(totalv.GetDim(0) >= nwf);
+  assert(nelectrons == sample->electronSize());
+
+  Array1 <doublevar> ionpos(3), oldpos(3), newpos(3);
+  Array1 <doublevar> newdist(5), olddist(5);
+  Wf_return val(nwf,2);
+
+  //totalv=0;
+  //  doublevar accum_local=0;
+  //  doublevar accum_nonlocal=0;
+
+  wf->updateVal(wfdata, sample);
+  wfStore.initialize(sample, wf);
+
+  int accept_counter=0;
+  //deriv.Resize(natoms, 3);
+  //deriv=0;
+  Array1 <doublevar> nonlocal(nwf);
+  Array2 <doublevar> integralpts(nwf, maxaip);
+  Array1 <doublevar> rDotR(maxaip);
+  for(int at = 0; at< natoms; at++){
+    if(numL(at) != 0) {
+      Array1 <doublevar> v_l(numL(at));
+      sample->getIonPos(at, ionpos);
+      for (int e=0; e<sample->electronSize(); e++) {
+        sample->getElectronPos(e, oldpos);
+
+        //note: this updateEIDist might become inefficient..
+        //depends on how often we're rejecting/how much it costs
+        //to do it.  If needed, we should add an interface to 
+        //Sample_point
+        sample->updateEIDist();
+        sample->getEIDist(e, at, olddist);
+        nonlocal=0.0;
+
+        int spin=1;
+        if(e < sys->nelectrons(0)) spin=0;
+        getRadial(at,spin, sample, olddist, v_l);
+
+        //----------------------------------------
+        //Start integral
+
+        int accept;
+        if(deterministic) {
+          accept= olddist(0) < cutoff(at);
+        }
+        else {
+          doublevar strength=0;
+
+          for(int l=0; l<numL(at)-1; l++)
+            strength+=calculate_threshold*(2*l+1)*fabs(v_l(l));
+
+          strength=min((doublevar) 1.0, strength);
+
+          doublevar rand=accept_var(accept_counter++);
+          //cout << at <<"  random number  " << rand
+          //   << "  p_eval  " << strength  << endl;
+          if (strength > 0.0) {
+            for(int l=0; l<numL(at)-1; l++)
+              v_l(l)/=strength;
+          }
+          accept=strength>rand;
+        }
+
+        //bool localonly = true;
+        if(accept)  {
+          wfStore.saveUpdate(sample, wf, e);
+          Wf_return  oldWfVal(nwf,2);
+          wf->getVal(wfdata, e,oldWfVal);
+
+          for(int i=0; i< aip(at); i++) {
+            sample->setElectronPos(e, oldpos);
+            doublevar base_sign=sample->overallSign();
+            doublevar base_phase=sample->overallPhase();
+
+            for(int d=0; d < 3; d++)
+              newpos(d)=integralpt(at,i,d)*olddist(0)-olddist(d+2);
+            sample->translateElectron(e, newpos);
+            sample->updateEIDist();
+            sample->getEIDist(e,at,newdist);
+            rDotR(i)=0;
+            for(int d=0; d < 3; d++)
+              rDotR(i)+=newdist(d+2)*olddist(d+2);
+            doublevar new_sign=sample->overallSign();
+            doublevar new_phase=sample->overallPhase();
+
+            rDotR(i)/=(newdist(0)*olddist(0));  //divide by the magnitudes
+            wf->updateVal(wfdata, sample);
+            wf->getVal(wfdata, e, val);
+            //----
+            //cout << "signs " << base_sign << "  " << new_sign << endl;;
+            for(int w=0; w< nwf; w++) {
+              integralpts(w,i)=exp(val.amp(w, 0) - oldWfVal.amp(w, 0))*integralweight(at, i);
+              if (val.is_complex==1) {
+                integralpts(w, i)*=cos(val.phase(w, 0)+new_phase - oldWfVal.phase(w,0) - base_phase);
+              } else {
+                integralpts(w, i)*=val.sign(w)*oldWfVal.sign(w)*base_sign*new_sign;
+              }
+            }
+
+            for(int w=0; w< nwf; w++)  {
+              doublevar tempsum=0;
+              for(int l=0; l< numL(at)-1; l++) {
+                tempsum+=(2*l+1)*v_l(l)*rellegendre(rDotR(i), l);
+              }
+              doublevar vxx=tempsum*integralpts(w,i);
+              //if (vxx>=0.0)
+              nonlocal(w) += vxx;
+            }
+            sample->setElectronPos(e, oldpos);
+          }
+
+          //--------------------
+          wfStore.restoreUpdate(sample, wf, e);
+        }
+
+      //----------------------------------------------
+      //now do the local part
+        doublevar vLocal=0;
+        int localL=numL(at)-1; //The l-value of the local part is
+        //the last part.
+
+        vLocal=v_l(localL);
+        //        accum_local+=vLocal;
+        //accum_nonlocal+=nonlocal(0);
+
+        //cout << "atom " << at << " r " << olddist(0) <<   " vLocal  " << vLocal
+        // << "    nonlocal   " << nonlocal(0) << endl;
+        for(int w=0; w< nwf; w++) {
+          totalv(e, w)+=vLocal+nonlocal(w);
+        }
+      }
+    }  //if atom has any psp's
+
+  }  //atom loop
+
+  //cout << "psp: local part " << accum_local
+  // << "  nonlocal part " << accum_nonlocal << endl;
+}
+
+
+
+int RelPseudopotential::nTest() {
+  int tot=0;
+  int natoms=numL.GetDim(0);
+  for(int at=0; at < natoms; at++) {
+    if(numL(at) != 0) {
+      tot+=nelectrons;
+    }
+  }
+  return tot;
+}
+
+
+void RelPseudopotential::calcNonloc(Wavefunction_data * wfdata, System * sys,
+                                 Sample_point * sample, Wavefunction * wf,
+                                 Array1 <doublevar> & totalv) {
+  int tot=nTest();
+  Array1 <doublevar> test(tot);
+  for(int i=0; i< tot; i++) {
+    test(i)=rng.ulec();
+  }
+  calcNonlocWithTest(wfdata, sys, sample, wf, test, totalv);
+}
+
+
+void RelPseudopotential::randomize() {
+  Array1 <doublevar> x(3), y(3), z(3);
+  generate_random_rotation(x,y,z);
+  rotateQuadrature(x,y,z);
+}
+
+//----------------------------------------------------------------------
+void RelPseudopotential::rotateQuadrature(Array1 <doublevar> & x,
+                                       Array1 <doublevar> & y,
+                                       Array1 <doublevar> & z)
+{
+
+
+  int natoms=aip.GetDim(0);
+
+  //cout << "x1, x2, x3" << x1 << "   " << x2 << "   " << x3 << endl;
+  //cout << "y1, y2, y3" << y1 << "   " << y2 << "   " << y3 << endl;
+  //cout << "z1, z2, z3" << z1 << "   " << z2 << "   " << z3 << endl;
+
+  for(int at=0; at<natoms; at++)
+  {
+    //cout << "-----------atom   " << at << endl;
+    for(int i=0; i< aip(at); i++)
+    {
+      //cout << "quadrature points before:\n"
+      //   << integralpt(at, i, 0) << "   "
+      //   <<integralpt(at, i, 1) << "    "
+      //   <<integralpt(at, i, 2) << "    \n";
+      integralpt(at,i,0)=integralpt_orig(at,i,0)*x(0)
+                         +integralpt_orig(at,i,1)*y(0)
+                         +integralpt_orig(at,i,2)*z(0);
+      integralpt(at,i,1)=integralpt_orig(at,i,0)*x(1)
+                         +integralpt_orig(at,i,1)*y(1)
+                         +integralpt_orig(at,i,2)*z(1);
+      integralpt(at,i,2)=integralpt_orig(at,i,0)*x(2)
+                         +integralpt_orig(at,i,1)*y(2)
+                         +integralpt_orig(at,i,2)*z(2);
+      //cout << "quadrature points after:\n"
+      //   << integralpt(at, i, 0) << "   "
+      //           <<integralpt(at, i, 1) << "    "
+      //   <<integralpt(at, i, 2) << "    \n";
+    }
+  }
+}
+
+
+
+
+void RelPseudopotential::calcNonlocSeparated(Wavefunction_data * wfdata, System * sys,
+                                          Sample_point * sample,
+                                          Wavefunction * wf,
+                                          Array1 <doublevar> & totalv
+                                          )
+{
+  int tot=nTest();
+  Array1 <doublevar> test(tot);
+  for(int i=0; i< tot; i++) {
+    test(i)=rng.ulec();
+  }
+  Array1 <doublevar> parm_deriv;
+  //  Array1 <doublevar> totalv(wf->nfunc(),0.0);
+  vector<Tmove> tmoves;
+  calcNonlocWithAllvariables(wfdata,sys,sample, wf, test, totalv, Tmoves::no_tmove,tmoves,false, parm_deriv);
+}
+
+
+
 
 void RelPseudopotential::calcNonlocWithTest(Wavefunction_data *wfdata , System * sys, 
                                          Sample_point * sample, Wavefunction *wf ,
@@ -633,6 +924,41 @@ void RelPseudopotential::getRadial(int at, int spin, Sample_point * sample,
 }
 
 //----------------------------------------------------------------------
+
+int RelPseudopotential::showinfo(ostream & os)
+{
+  os << "Pseudopotential " << endl;
+  string indent="  ";
+  vector <string> uniquenames;
+  int natoms=aip.GetDim(0);
+  for(int at=0; at < natoms; at++) {
+    int unique=1;
+    for(unsigned int i=0; i< uniquenames.size(); i++) {
+      if(uniquenames[i]==atomnames[at]) {
+        unique=0;
+        break;
+      }
+    }
+    if(unique) {
+      uniquenames.push_back(atomnames[at]);
+
+      os << "atom " << atomnames[at] << endl;
+      if(numL(at)==0) { os << "No pseudopotential" << endl; }
+      else {
+        os << "Integration points " << aip(at) << endl;
+        if(deterministic)
+          os << "Cutoff for static calculation "<<cutoff(at)<<endl;
+        os << "Pseudopotential for spin up: \n";
+        radial_basis(at,0)->showinfo(indent, os);
+        os << "Pseudopotential for spin down: \n";
+        radial_basis(at,1)->showinfo(indent, os);
+        os << "Strength for random evaluation (cutoff_threshold): " << calculate_threshold << endl;
+      }
+    }
+  }
+
+  return 1;
+}
 
 
 //------------------------------------------------------------------------

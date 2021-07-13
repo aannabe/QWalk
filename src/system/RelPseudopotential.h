@@ -45,8 +45,16 @@ public:
   {deterministic=0;}
   
 
+  void setDeterministic(int i) {
+    assert(i==0 || i==1);
+    deterministic=i;
+  }
+
   void read(vector < vector <string> > & pseudotext,
             System * sys);
+
+  int showinfo(ostream & os);
+
   /*!
     \brief
     Standard calculation of the pseudopotential.
@@ -54,12 +62,44 @@ public:
     Uses random evaluation of the pseudopotential automatically.
    */
 
+  void calcNonloc(Wavefunction_data * wfdata, System *,
+                  Sample_point * sample, Wavefunction * wf,
+                  Array1 <doublevar> & totalv);
+
+
+//I didn't add the functionality in .cpp file.
+  void calcPseudoSeparated(Wavefunction_data * wfdata,
+                           System * sys,
+                           Sample_point * sample,
+                           Wavefunction * wf,
+                           const Array1 <doublevar> & accept_var,
+                           Array2 <doublevar> & totalv); //, 
+  void calcPseudoLocal(Wavefunction_data * wfdata,
+                       System * sys,
+                       Sample_point * sample,
+                       Wavefunction * wf,
+           Array2 <doublevar> & totalv) {
+    error("calcPseudoLocal not implemented");
+  }
+//Until here.
+
+
   void calcNonlocTmove(Wavefunction_data * wfdata, System *,
                        Sample_point * sample,
                        Wavefunction * wf,
                        Array1 <doublevar> & totalv,  //total p.e. from the psp
                        vector <Tmove> & tmoves  //variables for T-moves of Casula
                        );
+
+  //Puts all matrix elements into 'tmoves' The total nonlocal potential is given 
+  //by sum over tmoves.vxx
+  void calcNonlocSeparated(Wavefunction_data * wfdata, System * sys,
+                           Sample_point * sample,
+                           Wavefunction * wf,
+                           Array1<doublevar> &totalv
+//                           vector <Tmove> & tmoves  //variables for T-moves of Casula
+                           );
+
   /*!
     \brief
     Provide your own random numbers for random evaluation of psp
@@ -101,10 +141,67 @@ public:
                                   bool parm_derivatives, Array1 <doublevar> & parm_deriv //derivatives wrt wf parameters
                                   );
 
+
+  int initializeStatic(Wavefunction_data *, Sample_point *,
+                               Wavefunction *, Pseudo_buffer & output) {
+    error("initializeStatic is deprecated");
+  }
+
+
+  int nTest();
+
+  void randomize();
+
+  /*!
+    \brief
+    Rotate the quadrature to the axes specified in x,y,z
+  */
+  void rotateQuadrature(Array1 <doublevar> & x,
+                        Array1 <doublevar> & y,
+                        Array1 <doublevar> & z);
+  /*!
+    \brief 
+    This set of Get... functions are for EKT calculations, for getting value of some     private numbers. 
+   */
+  int getNumL(int at) {
+    return numL(at);
+  }
+
+  doublevar getCutoff(int at) {
+    return cutoff(at);
+  }
+  int getDeterministic() {
+    return deterministic;
+  }
+
+  int getAIP(int at) {
+    return aip(at);
+  }
+
+  int getIntegralWeight(int at, int i) {
+    return integralweight(at, i);
+  }
+
+  doublevar getIntegralPt(int at, int i, int d)
+  {
+    return integralpt(at, i, d);
+  }
+  int getMaxAIP() {
+  return maxaip;
+  }
+
+
+  void getRadialOut(int at, int spin, Sample_point *sample,
+                    Array1 <doublevar> & r, Array1 <doublevar> & v_l) {
+    getRadial(at, spin, sample, r, v_l);//This is completely the same with getRadial    . we redefine this so as not to mix with the original private one.
+  }
+
+
+
   ~RelPseudopotential();
 
 
-private:
+ private:
   int deterministic;
 
   void getRadial(int at, int spin, Sample_point * sample,
@@ -119,6 +216,7 @@ private:
   Array3 <doublevar> integralpt_orig;
   Array2 <doublevar> integralweight;
   Array1 <doublevar> cutoff;
+  doublevar calculate_threshold;
   Array1 <int> numL;
   vector <string> atomnames;
   Array1 <bool> addzeff; //!< whether or not to add Z_eff/r to the local function
@@ -128,6 +226,10 @@ private:
   Array2 <Basis_function *> radial_basis;
 
 };
+
+void gesqua(int & nq, Array1 <doublevar> & xq,Array1 <doublevar> & yq,
+            Array1 <doublevar> & zq, Array1 <doublevar> & wq);
+
 
 #endif //PSEUDOPOTENTIAL_H_INCLUDED
 //------------------------------------------------------------------------
