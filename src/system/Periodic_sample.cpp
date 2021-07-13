@@ -395,9 +395,18 @@ void Periodic_sample::translateElectron(const int e, const Array1 <doublevar> & 
   doublevar kdotr=0;
   for(int d=0; d< 3; d++) 
     kdotr+=parent->kpt(d)*nshift(d);
-  if ( update_overall_sign ) overall_sign*=cos(pi*kdotr);
-  // the sign of the phase here is critical for correct evaluation of
-  // pseudopotentials (and density matrices)
+  //if ( update_overall_sign ) overall_sign*=cos(pi*kdotr);
+  //// the sign of the phase here is critical for correct evaluation of
+  //// pseudopotentials (and density matrices)
+
+  if (e==19 || e==29) {
+  	overall_sign*=1;
+        //cout << "Overall sign multiplied by 1 for electron: " << e << endl;
+  }
+  else if ( update_overall_sign ) {
+        overall_sign*=cos(pi*kdotr);
+  }
+
   overall_phase-=pi*kdotr;
   // I suppose the value of overall_phase averages around zero, no
   // "modulo" operation should be needed

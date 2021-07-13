@@ -231,7 +231,16 @@ template <class T> void MO_matrix_cutoff<T>::init() {
           else temp=coeff(coeffmat(mo,ion,f));
           if(abs(temp) > threshold) {
             mofill(mo, nbasis(mo))=totfunc;
+            //moCoeff2(mo, nbasis(mo))=kptfac*magnification_factor*temp;
+
+            if(mo==19 || mo==29) {
+              moCoeff2(mo, nbasis(mo))=magnification_factor*temp;
+	      //cout << "k-point factor overriden for MO: " << mo << endl;
+            }
+            else {
             moCoeff2(mo, nbasis(mo))=kptfac*magnification_factor*temp;
+            }
+
             nbasis(mo)++;
           }
 
