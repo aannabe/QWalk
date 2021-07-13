@@ -809,7 +809,7 @@ void Linear_optimization_method::wavefunction_derivative(
   vmc_section+="  nblock 20 average { WF_PARMDERIV "; 
   if(pseudopotential_derivatives) vmc_section+="EVALUATE_PSEUDOPOTENTIAL";
   vmc_section+=" nodal_cutoff ";
-  vmc_section+=to_string(nodal_cutoff);
+  //vmc_section+=to_string(nodal_cutoff);
   vmc_section+="} ";
   vector <string> words;
   string sep=" ";

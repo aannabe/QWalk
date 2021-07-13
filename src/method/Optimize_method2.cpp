@@ -310,14 +310,15 @@ void Optimize_method2::run(Program_options & options, ostream & output)
       }
     } 
     else{ //not dynamic_pp
-      if(dynamic_wf){
-        pseudo->initializeStatic(wfdata, sample(0), wf(0), psp_buff);
-        //wf(0)->notify(sample_static,0);
-      }
-      else{
-        pseudo->initializeStatic(wfdata, sample(walker), wf(walker), psp_buff);
-        wf(walker)->notify(sample_static,0);
-      }
+      // if(dynamic_wf){
+      //   pseudo->initializeStatic(wfdata, sample(0), wf(0), psp_buff);
+      //   //wf(0)->notify(sample_static,0);
+      // }
+      // else{
+      //   pseudo->initializeStatic(wfdata, sample(walker), wf(walker), psp_buff);
+      //   wf(walker)->notify(sample_static,0);
+      // }
+      error("dynamic_pp = 0; is deprecated. This shouldn't occur.");
     }
   }//walker
 
@@ -453,12 +454,13 @@ void Optimize_method2::func_val(int n, const Array1 <double> & parms, double & v
       }
     }
     else{
-      if(dynamic_wf)
-	pseudo->calcNonlocWithFile(wfdata,sysprop, sample(0), wf(0),
-				   nonloc, psp_buff);
-      else
-	pseudo->calcNonlocWithFile(wfdata, sysprop, sample(walker), wf(walker),
-				   nonloc, psp_buff);
+      // if(dynamic_wf)
+	    //   pseudo->calcNonlocWithFile(wfdata,sysprop, sample(0), wf(0),
+			// 	   nonloc, psp_buff);
+      // else
+	    //   pseudo->calcNonlocWithFile(wfdata, sysprop, sample(walker), wf(walker),
+			// 	   nonloc, psp_buff);
+      error("dynamic_pp = 0; is deprecated. This shouldn't occur.");
     }
 
     if(debug_out)
@@ -584,14 +586,15 @@ void Optimize_method2::energy_grad(Array1 <double> & parms, int nparms_start, in
 	}
       }
       else{
-	if(dynamic_wf){
-	  pseudo->calcNonlocWithFile(wfdata, sysprop, sample(0), wf(0),
-				     nonloc, psp_buff);
-	}
-	else{  
-	  pseudo->calcNonlocWithFile(wfdata, sysprop,sample(walker), wf(walker),
-				     nonloc, psp_buff);
-	}
+	// if(dynamic_wf){
+	//   pseudo->calcNonlocWithFile(wfdata, sysprop, sample(0), wf(0),
+	// 			     nonloc, psp_buff);
+	// }
+	// else{  
+	//   pseudo->calcNonlocWithFile(wfdata, sysprop,sample(walker), wf(walker),
+	// 			     nonloc, psp_buff);
+	// }
+      error("dynamic_pp = 0; is deprecated. This shouldn't occur.");
       }
       
       
@@ -739,14 +742,15 @@ void Optimize_method2::func_hessian(Array1 <double> & parms, int nparms_start, i
 	      pseudo->calcNonlocWithTest(wfdata,sysprop, sample(walker), wf(walker), psp_test(walker),nonloc );
 	  }
 	  else{
-	    if(dynamic_wf){
-	      pseudo->calcNonlocWithFile(wfdata,sysprop, sample(0), wf(0),
-					 nonloc, psp_buff);
-	    }
-	    else{
-	      pseudo->calcNonlocWithFile(wfdata,sysprop, sample(walker), wf(walker),
-					 nonloc, psp_buff);
-	    }
+	    // if(dynamic_wf){
+	    //   pseudo->calcNonlocWithFile(wfdata,sysprop, sample(0), wf(0),
+			// 		 nonloc, psp_buff);
+	    // }
+	    // else{
+	    //   pseudo->calcNonlocWithFile(wfdata,sysprop, sample(walker), wf(walker),
+			// 		 nonloc, psp_buff);
+	    // }
+      error("dynamic_pp = 0; is deprecated. This shouldn't occur.");
 	  }
 	  e_local(j)(walker)=kinetic(0) + coulpot+ nonloc(0);
 
@@ -1027,10 +1031,11 @@ void Optimize_method2::energy_grad_analytical(Array1 <double> & parms, int nparm
       }
     }
     else { //not dynamic_pp
-      if(dynamic_wf)
-	pseudo->calcNonlocWithFile(wfdata,sysprop, sample(0), wf(0),nonloc, psp_buff);
-      else
-	pseudo->calcNonlocWithFile(wfdata, sysprop,sample(walker), wf(walker),nonloc, psp_buff);
+  //     if(dynamic_wf)
+	// pseudo->calcNonlocWithFile(wfdata,sysprop, sample(0), wf(0),nonloc, psp_buff);
+  //     else
+	// pseudo->calcNonlocWithFile(wfdata, sysprop,sample(walker), wf(walker),nonloc, psp_buff);
+      error("dynamic_pp = 0; is deprecated. This shouldn't occur.");
     }
     
     E_local(walker)=kinetic(0) + coulpot+ nonloc(0);
@@ -1159,13 +1164,14 @@ void Optimize_method2::func_hessian_analytical(Array1 <double> & parms, int npar
       }
     }
     else{ //not dynamic_pp
-      if(dynamic_wf){
-	pseudo->calcNonlocWithFile(wfdata, sysprop, sample(0), wf(0),nonloc, psp_buff);
-      }
-      else{
-	pseudo->calcNonlocWithFile(wfdata,sysprop, sample(walker), wf(walker),nonloc, psp_buff);
-      }
-      nonloc_old(walker)=nonloc(0);
+  //     if(dynamic_wf){
+	// pseudo->calcNonlocWithFile(wfdata, sysprop, sample(0), wf(0),nonloc, psp_buff);
+  //     }
+  //     else{
+	// pseudo->calcNonlocWithFile(wfdata,sysprop, sample(walker), wf(walker),nonloc, psp_buff);
+  //     }
+  //     nonloc_old(walker)=nonloc(0);
+      error("dynamic_pp = 0; is deprecated. This shouldn't occur.");
     }
     E_local(walker)=kinetic(0)+coulpot+nonloc(0);
   }//walker
@@ -1193,18 +1199,19 @@ void Optimize_method2::func_hessian_analytical(Array1 <double> & parms, int npar
 	e_local_gradient(i)(walker)=nonloc_deriv(walker)(i)+(kinetic(0)-kinetic_old(walker))/ddelta(i);
       }
       else{//not dynamic_pp
-	if(dynamic_wf){
-	  config_pos(walker).restorePos(sample(0)); 
-	  wf(0)->updateLap(wfdata, sample(0));
-	  sysprop->calcKinetic(wfdata, sample(0), wf(0), kinetic);
-	  pseudo->calcNonlocWithFile(wfdata,sysprop, sample(0), wf(0),nonloc, psp_buff);
-	}
-	else{
-	  wf(walker)->updateLap(wfdata, sample(walker));
-	  sysprop->calcKinetic(wfdata, sample(walker), wf(walker), kinetic);
-	  pseudo->calcNonlocWithFile(wfdata, sysprop, sample(walker), wf(walker),nonloc, psp_buff);
-	}
-	e_local_gradient(i)(walker)=(kinetic(0)+nonloc(0)-kinetic_old(walker)-nonloc_old(walker))/ddelta(i);
+	// if(dynamic_wf){
+	//   config_pos(walker).restorePos(sample(0)); 
+	//   wf(0)->updateLap(wfdata, sample(0));
+	//   sysprop->calcKinetic(wfdata, sample(0), wf(0), kinetic);
+	//   pseudo->calcNonlocWithFile(wfdata,sysprop, sample(0), wf(0),nonloc, psp_buff);
+	// }
+	// else{
+	//   wf(walker)->updateLap(wfdata, sample(walker));
+	//   sysprop->calcKinetic(wfdata, sample(walker), wf(walker), kinetic);
+	//   pseudo->calcNonlocWithFile(wfdata, sysprop, sample(walker), wf(walker),nonloc, psp_buff);
+	// }
+	// e_local_gradient(i)(walker)=(kinetic(0)+nonloc(0)-kinetic_old(walker)-nonloc_old(walker))/ddelta(i);
+      error("dynamic_pp = 0; is deprecated. This shouldn't occur.");
       }
     }//walker
     temp_parms(i+nparms_start)-=ddelta(i);
