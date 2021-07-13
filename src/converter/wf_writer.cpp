@@ -367,24 +367,24 @@ void print_3b_jastrow2(ostream & os, std::vector<std::string> & unique_atoms, do
     << "   UNLIKE_COEFFICIENTS { 0.0 0.5 } \n }\n"
     << "}\n";
   os << "GROUP { \n OPTIMIZEBASIS\n"
-    <<" EEBASIS { EE POLYPADE BETA0 0.5 NFUNC 3 RCUT " << cutoff << " }\n";
+    <<" EEBASIS { EE POLYPADE BETA0 0.5 NFUNC 5 RCUT " << cutoff << " }\n";
   for(vector<string>::iterator i=unique_atoms.begin(); i!= unique_atoms.end();
       i++) { 
-    os << " EIBASIS { " << *i << " POLYPADE BETA0 0.2 NFUNC 4 RCUT " << cutoff << " } \n";
+    os << " EIBASIS { " << *i << " POLYPADE BETA0 0.2 NFUNC 5 RCUT " << cutoff << " } \n";
   }
   os << " ONEBODY { \n";
   for(vector<string>::iterator i=unique_atoms.begin(); i!= unique_atoms.end();
       i++) { 
-    os << "  COEFFICIENTS { " << *i << " 0 0 0 0  } \n";
+    os << "  COEFFICIENTS { " << *i << " 0 0 0 0 0 } \n";
   }
   os << " }\n";
   os << " TWOBODY { \n";
-  os << "  COEFFICIENTS { 0 0 0 } \n";
+  os << "  COEFFICIENTS { 0 0 0 0 0 } \n";
   os << " }\n";
   os << " THREEBODY { \n";
   for(vector<string>::iterator i=unique_atoms.begin(); i!= unique_atoms.end();
       i++) { 
-    os << "  COEFFICIENTS { " << *i << " 0 0 0 0 0 0 0 0  0 0 0 0 } \n";
+    os << "  COEFFICIENTS { " << *i << " 0 0 0 0 0 0 0 0 0 0 0 0 } \n";
   }
   os << " }\n";
   os << "}\n";
